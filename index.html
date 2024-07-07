@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lyric Writer</title>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400&display=swap" rel="stylesheet">
+</head>
+<body>
+    <p id="title">Lyric Writer 2</p>
+	
+	<div id="fontSizeControls">
+    <div class="btn" onclick="changeFontSize(1)"><img src="img/zoomIn.png" alt="[+]"></div>
+    <div class="btn" onclick="changeFontSize(-1)"><img src="img/zoomOut.png" alt="[-]"></div>
+    <div class="btn" onclick="confirmClearText()"><img src="img/new.png" alt="[Clear]"></div>
+    <div class="btn" onclick="saveToFile()"><img src="img/save.png" alt="[Save]"></div>
+    <div class="btn" onclick="loadFromFile()"><img src="img/open.png" alt="[Load]"></div>
+	<div class="btn" onclick="toggleDarkMode()"><img src="img/darkmode.png" alt="[Dark Mode]"></div>
+    </div>
+
+    <div id="container">
+        <div id="syllableCount"></div>
+        <textarea id="lyrics" oninput="countAndDisplaySyllables()" onscroll="syncScroll()"></textarea>
+    </div>
+
+ <script>
+function countSyllables(word) {
+    word = word.toLowerCase().trim();
+
+    // Count vowel sequences
+    let vowelCount = word.match(/[aeiouy]{1,2}/g) || [];
+    
+    // Adjust for words ending with 'e'
+    if (word.endsWith('e')) {
+        const lastChar = word[word.length - 2];
+        if (!lastChar.match(/[aeiou]/)) {
+            vowelCount.pop(); // Remove the trailing 'e'
+        }
+    }
+    
+    // Words containing 'ia' or 'io' count as one syllable
+    if (word.match(/ia|io/gi)) {
+        vowelCount.pop(); // Remove the extra syllable
+    }
+
+    return Math.max(vowelCount.length, 1);
+}
+
+
+
+        function toggleDarkMode() {
+        console.log('Toggle Dark Mode called');
+        
+        var body = document.body;
+        body.classList.toggle('dark-mode');
+
+        // Check if dark mode is enabled and update the styles
+        var isDarkMode = body.classList.contains('dark-mode');
+
+        var elementsToToggle = [
+            { id: 'container', property: 'borderColor', lightValue: '#AAAAAA', darkValue: '#666666' },
+            { id: 'title', property: 'color', lightValue: '#000000', darkValue: '#bbbbbb' },
+            { id: 'lyrics', property: 'color', lightValue: '#000000', darkValue: '#bbbbbb' },
+            { id: 'syllableCount', property: 'backgroundColor', lightValue: '#DFDFDF', darkValue: '#333333' },
+			{ id: 'syllableCount', property: 'color', lightValue: '#222222', darkValue: '#888888' },
+            { id: 'body', property: 'backgroundColor', lightValue: '#f0f0f0', darkValue: '#545454' },
+            { id: 'body', property: 'backgroundImage', lightValue: 'url("img/bgLight.png")', darkValue: 'url("img/bgDark.png")' },
+			{ id: 'body', property: 'color', lightValue: '#000000', darkValue: '#bbbbbb' },
+        ];
+
+        elementsToToggle.forEach(function (element) {
+            var targetElement = document.getElementById(element.id) || document.body;
+
+            if (targetElement) {
+                targetElement.style[element.property] = isDarkMode ? element.darkValue : element.lightValue;
+            } else {
+                console.warn('Element with ID ' + element.id + ' not found.');
+            }
+        });
+    }
+
+    function countAndDisplaySyllables() {
+    var lyricsTextarea = document.getElementById('lyrics');
+    var syllableCountDiv = document.getElementById('syllableCount');
+
+    var lyrics = lyricsTextarea.value;
+    var lines = lyrics.split('\n');
+
+    // Array to store syllable counts for each line
+    var syllableCountsPerLine = lines.map(line => {
+        if (line.trim() === '') {
+            return ''; // Return empty string for blank lines
+        } else {
+            return countSyllables(line).toString();
+        }
+    });
+
+    syllableCountDiv.innerText = syllableCountsPerLine.join('\n');
+}
+
+
+
+// Update syllable count on various events
+document.getElementById('lyrics').addEventListener('input', countAndDisplaySyllables);
+document.getElementById('lyrics').addEventListener('paste', function() {
+    setTimeout(countAndDisplaySyllables, 0);
+});
+
+
+    function changeFontSize(delta) {
+        var lyricsTextarea = document.getElementById('lyrics');
+        var currentFontSize = parseInt(window.getComputedStyle(lyricsTextarea, null).getPropertyValue('font-size'));
+        var newFontSize = currentFontSize + delta;
+
+        newFontSize = Math.max(newFontSize, 12); // Minimum font size
+        newFontSize = Math.min(newFontSize, 36); // Maximum font size
+
+        lyricsTextarea.style.fontSize = newFontSize + 'px';
+        document.getElementById('syllableCount').style.fontSize = newFontSize + 'px';
+        countAndDisplaySyllables();
+    }
+
+    function syncScroll() {
+    var lyricsTextarea = document.getElementById('lyrics');
+    var syllableCountDiv = document.getElementById('syllableCount');
+
+    // Calculate the percentage scrolled in the lyrics textarea
+    var percentageScrolled = lyricsTextarea.scrollTop / (lyricsTextarea.scrollHeight - lyricsTextarea.clientHeight);
+
+    // Calculate scroll position in the syllable count div
+    var syllableCountScrollTop = percentageScrolled * (syllableCountDiv.scrollHeight - syllableCountDiv.clientHeight);
+
+    // Set the scroll position in the syllable count div
+    syllableCountDiv.scrollTop = syllableCountScrollTop;
+}
+
+
+function confirmClearText() {
+    var lyricsTextarea = document.getElementById('lyrics');
+
+    if (lyricsTextarea.value.trim() === '') {
+        clearText();
+    } else {
+        var confirmation = confirm("Do you want to save your work before starting a new project?");
+        if (confirmation) {
+            saveToFile();
+        }
+        clearText();
+    }
+}
+
+function clearText() {
+    var lyricsTextarea = document.getElementById('lyrics');
+    lyricsTextarea.value = '';
+    countAndDisplaySyllables(); // Update syllable count after clearing text
+}
+
+
+    function saveToFile() {
+        var lyricsTextarea = document.getElementById('lyrics');
+        var lyrics = lyricsTextarea.value;
+
+        var blob = new Blob([lyrics], { type: 'text/plain' });
+        var link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        link.download = 'lyrics.txt';
+        link.click();
+    }
+
+    function loadFromFile() {
+    var input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'text/plain';
+
+    input.onchange = function (event) {
+        var file = event.target.files[0];
+        if (file) {
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                var lyricsTextarea = document.getElementById('lyrics');
+                lyricsTextarea.value = e.target.result;
+                countAndDisplaySyllables(); // Update syllable count after setting the textarea value
+            };
+            reader.readAsText(file);
+        }
+    };
+
+    input.click();
+}
+
+// Initial syllable count calculation on page load
+window.addEventListener('load', countAndDisplaySyllables);
+</script>
+</body>
+</html>
