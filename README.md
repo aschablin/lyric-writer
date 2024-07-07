@@ -9,6 +9,7 @@ Features:
 -Save/Load to and from .txt files
 -Syllable counter on the left side
 -Light/Dark mode
+-Increase/decrease text size (doesn't save text size)
 
 The code is a bit messy, and there are some glitches but I hope it can help some of you.
 
